@@ -4,10 +4,16 @@ myhome=/home/dave/
 dest=/nfs/nas/BackUps/PortablePear/ # destination directory on drive or nfs
 nas=dave@192.168.100.34:/volume1/Stuff/ # if no nas, comment this out
 mntpt=/nfs/nas # your mount point, if using network drive or external, may be in /media. blank if saving locally
+mounted    () { findmnt -rno SOURCE,TARGET "$1" >/dev/null;} #path or device
 
-# Mount a NAS
+# Mount a NAS, if needed
 if [ -v $nas ]; then
-    sudo mount 192.168.100.34:/volume1/Stuff /nfs/nas
+    if mounted "$mntpt"; then
+        echo "Mounting the NAS... giggity."
+        sudo mount 192.168.100.34:/volume1/Stuff /nfs/nas
+    else
+        echo "Drive is mounted, here we go!"
+    fi
 fi
 
 # Shut up and do it! I've got things to do...
@@ -40,13 +46,14 @@ if [ "$minechatmail" == "y" ]; then
     tar czfvp $dest/bkup.email.tar.gz $myhome/.thunderbird/
 fi
 
-# Browsers, it's nice if you clear the caches first, otherwise it can get large
+# Browsers, I'm trying the --exclude-caches tag. I don't know how I feel about it yet.
+# Otherwise, it's nice if you clear the caches first, otherwise it can get large
 if [ "$browsers" == "y" ]; then
-    tar czfvp $dest/bkup.mozilla.tar.gz $myhome/.mozilla
-    tar czfvp $dest/bkup.chromium.tar.gz $myhome/.config/google-chrome/
-    tar czfvp $dest/bkup.edge-beta.tar.gz $myhome/.config/microsoft-edge-beta/Default/
-    tar czfvp $dest/bkup.edge-dev.tar.gz $myhome/.config/microsoft-edge-dev/Default/
-    tar czfvp $dest/bkup.brave.tar.gz $myhome/.config/BraveSoftware/
+    tar czfvp $dest/bkup.mozilla.tar.gz --exclude-caches $myhome/.mozilla
+    tar czfvp $dest/bkup.chromium.tar.gz --exclude-caches $myhome/.config/google-chrome/
+    tar czfvp $dest/bkup.edge-beta.tar.gz --exclude-caches $myhome/.config/microsoft-edge-beta/Default/
+    tar czfvp $dest/bkup.edge-dev.tar.gz --exclude-caches $myhome/.config/microsoft-edge-dev/Default/
+    tar czfvp $dest/bkup.brave.tar.gz --exclude-caches $myhome/.config/BraveSoftware/
 fi
 
 # Network saves
