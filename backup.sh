@@ -1,15 +1,17 @@
 #!/bin/bash
-
-if [[ "$EUID" -ne 0 ]]; then
-	echo "use sudo ./backup.sh - it's for mounting external drives or network drives. If you don't have such things, delete this block"
-	exit 2
-fi
-
 myhome=/home/dave
 dest=/nfs/nas/BackUps # destination directory on drive or nfs
 nas=dave@192.168.100.34:/volume1/Stuff # if no nas, comment this out
 mntpt=/nfs/nas # your mount point, if using network drive or external, may be in /media. blank if saving locally
-mounted    () { findmnt -rno SOURCE,TARGET "$1" >/dev/null;} #path or device
+
+if [[ "$EUID" -ne 0 ]] && [[ ! -v $nas ]]; then
+	echo "use sudo ./backup.sh"
+	echo "it's for mounting external drives or network drives."
+	echo "If you don't have such things, comment out the nas variable"
+	exit 2
+fi
+
+mounted    () { findmnt -rno SOURCE,TARGET "$1" >/dev/null;}
 
 # Mount a NAS
 if [ -v $nas ]; then
@@ -17,7 +19,7 @@ if [ -v $nas ]; then
         echo "Mounting the NAS... giggity."
         sudo mount 192.168.100.34:/volume1/Stuff /nfs/nas
     else
-        echo "Drive is mounted, here we go!"
+        echo "NAS is mounted, here we go!"
     fi
 fi
 
