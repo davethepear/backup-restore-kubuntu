@@ -14,12 +14,12 @@ fi
 mounted    () { findmnt -rno SOURCE,TARGET "$1" >/dev/null;}
 
 # Mount a NAS
-if [ -v $nas ]; then
+if [ ! -v $nas ]; then
     if mounted "$mntpt"; then
+        echo "Drive is mounted, here we go!"
+    else
         echo "Mounting the NAS... giggity."
         sudo mount 192.168.100.34:/volume1/Stuff /nfs/nas
-    else
-        echo "NAS is mounted, here we go!"
     fi
 fi
 
