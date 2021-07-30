@@ -58,6 +58,7 @@ if [ "$mine" == "y" ]; then
 fi
 if [ "$pol" == "y" ]; then
     tar czfvp $dest/$HOSTNAME.wine.tar.gz $myhome/.PlayOnLinux
+fi
 if [ "$chat" == "y" ]; then
     tar czfvp $dest/$HOSTNAME.hexchat.tar.gz $myhome/.config/hexchat/
 fi
