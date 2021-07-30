@@ -1,17 +1,18 @@
 #!/bin/bash
+
 myhome=/home/dave
 dest=/nfs/nas/BackUps # destination directory on drive or nfs
 nas=dave@192.168.100.34:/volume1/Stuff # if no nas, comment this out
-mntpt=/nfs/nas # your mount point, if using network drive or external, may be in /media. blank if saving locally
+mntpt=/nfs/nas # your mount point, if using network drive or external, may be in /media. comment out if saving locally
 
-if [[ "$EUID" -ne 0 ]] && [[ ! -v $nas ]]; then
-	echo "use sudo ./backup.sh"
-	echo "it's for mounting external drives or network drives."
-	echo "If you don't have such things, comment out the nas variable"
+if [[ "$EUID" == 0 ]]; then
+	echo "if you use sudo to run this, you may have issues with connecting"
+	echo "to network drives or other servers. If you have such things,"
+	echo "that need sudo, add it in the script below... or remove the exit command"
 	exit 2
 fi
 
-mounted    () { findmnt -rno SOURCE,TARGET "$1" >/dev/null;}
+mounted    () { findmnt -rno SOURCE,TARGET "$1" >/dev/null;} #path or device
 
 # Mount a NAS
 if [ ! -v $nas ]; then
@@ -27,7 +28,10 @@ fi
 read -p "Backup everything, hit enter... or 'n' for step-by-step (Enter/n)?" parse
 if [ "$parse" == "" ]; then
     echo Backing up EVERYTHING!
-    minechatmail=y
+    mine=y
+    pol=y
+    chat=y
+    mail=y
     browsers=y
     networks=y
     settings=y
@@ -35,7 +39,10 @@ if [ "$parse" == "" ]; then
     copydocs=y
     copyvids=y
 else
-    read -p "Backup Minecrap, Chats, & Email?" minechatmail
+    read -p "Backup Minecraft?" mine
+    read -p "Backup Wine (Play on Linux)" pol
+    read -p "Backup Chat Programs?" chat
+    read -p "Backup Thunderbird?" mail
     read -p "Backup browsers?" browsers
     read -p "Backup network locations and logins?" networks
     read -p "Backup program settings?" settings
@@ -46,11 +53,16 @@ fi
 
 # Minecraft worlds... I use a lot of stuff in Wine (PoL)... and Hexchat (IRC)... and Thunderbird (email)
 # These are pretty large saves, usually, so I grouped them into one spot.
-if [ "$minechatmail" == "y" ]; then
+if [ "$mine" == "y" ]; then
     tar czfvp $dest/$HOSTNAME.minecraft.tar.gz $myhome/.minecraft/saves
+fi
+if [ "$pol" == "y" ]; then
     tar czfvp $dest/$HOSTNAME.wine.tar.gz $myhome/.PlayOnLinux
+if [ "$chat" == "y" ]; then
     tar czfvp $dest/$HOSTNAME.hexchat.tar.gz $myhome/.config/hexchat/
-    tar czfvp $dest/$HOSTNAME.email.tar.gz $myhome/.thunderbird/
+fi
+if [ "$mail" == "y" ]; then
+   tar czfvp $dest/$HOSTNAME.email.tar.gz $myhome/.thunderbird/
 fi
 
 # Browsers, I'm trying the --exclude-caches tag. I don't know how I feel about it yet.
@@ -73,7 +85,7 @@ if [ "$networks" == "y" ]; then
     tar czfvp $dest/$HOSTNAME.kdeconn.tar.gz $myhome/.config/kdeconnect/
 fi
 
-# other programs
+# other programs I have a few settings I hate tracking down
 if [ "$settins" == "y" ]; then
     tar czfvp $dest/$HOSTNAME.gnucash.tar.gz $myhome/.local/share/gnucash/
     tar czfvp $dest/$HOSTNAME.webcamoid.tar.gz $myhome/.config/Webcamoid/
@@ -100,13 +112,15 @@ fi
 # Copy videos, porn, whatever
 if [ "$copyvids" == "y" ]; then
     # This one is special due to a space in the directory name
-    rsync -ulrvzh --progress $myhome/Videos/ dave@192.168.100.34:"/volume1/Stuff/My\ Videos/2021"
+    rsync -ulrvzh --progress $myhome/Videos/ dave@192.168.100.34:"/volume1/Stuff/My\ Videos/vlogs/2021"
 fi
 
 # unmount NAS, or USB, or whatever... 
-if [ -v $nas ]; then
+if mounted "$mntpt"; then
     read -p "Unmount NAS?" umount
     if [ "$umount" == "y" ]; then
         sudo umount $mntpt
+	echo unmounted $mntpt
+	exit 2
     fi
 fi
