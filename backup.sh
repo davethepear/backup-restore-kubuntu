@@ -1,28 +1,33 @@
 #!/bin/bash
 
 myhome=/home/dave
-dest=/nfs/nas/BackUps # destination directory on drive or nfs
-nas=dave@192.168.100.34:/volume1/Stuff # if no nas, comment this out
 mntpt=/nfs/nas # your mount point, if using network drive or external, may be in /media. comment out if saving locally
+dest=/nfs/nas/BackUps/PortablePear # destination directory on drive or nfs
+naslogin=dave@192.168.100.34:/volume1/Stuff # NAS login - if no nas, comment this out
 
+bktime=$(date +"%F_%H-%M")
+logfile="$myhome/BackUpErrors-$bktime".log
+sudo -v
 if [[ "$EUID" == 0 ]]; then
-	echo "if you use sudo to run this, you may have issues with connecting"
-	echo "to network drives or other servers. If you have such things,"
-	echo "that need sudo, add it in the script below... or remove the exit command"
+	echo "While you need sudo for a few things, mount and umount, and a couple of system files"
+	echo "this shouldn't be run AS root, so now that you're verified as sudo you can run it"
+	echo "again without sudo: ./backup.sh"
 	exit 2
 fi
 
 mounted    () { findmnt -rno SOURCE,TARGET "$1" >/dev/null;} #path or device
 
 # Mount a NAS
-if [ ! -v $nas ]; then
+if [ ! -v $naslogin ]; then
     if mounted "$mntpt"; then
         echo "Drive is mounted, here we go!"
     else
         echo "Mounting the NAS... giggity."
-        sudo mount 192.168.100.34:/volume1/Stuff /nfs/nas
+        sudo mount -t nfs "${naslogin#*@}" $mntpt
     fi
 fi
+
+if [ ! -d $dest ]; then mkdir -p $dest ; fi
 
 # Shut up and do it! I've got things to do...
 read -p "Backup everything, hit enter... or 'n' for step-by-step (Enter/n)?" parse
@@ -37,6 +42,7 @@ if [ "$parse" == "" ]; then
     settings=y
     squishdocs=y
     copydocs=y
+    copydesk=y
     copyvids=y
 else
     read -p "Backup Minecraft?" mine
@@ -47,81 +53,137 @@ else
     read -p "Backup network locations and logins?" networks
     read -p "Backup program settings?" settings
     read -p "Compress Documents & Desktop into a tar.gz on NAS?" squishdocs
-    read -p "Backup Documents & Desktop to NAS?" copydocs
+    read -p "Copy Documents to NAS?" copydocs
+    read -p "Copy Desktop to NAS?" copydesk
     read -p "Backup Videos to NAS?" copyvids
 fi
-
 # Minecraft worlds... I use a lot of stuff in Wine (PoL)... and Hexchat (IRC)... and Thunderbird (email)
 # These are pretty large saves, usually, so I grouped them into one spot.
 if [ "$mine" == "y" ]; then
-    tar czfvp $dest/$HOSTNAME.minecraft.tar.gz $myhome/.minecraft/saves
+    tar czfpP - $myhome/.minecraft/saves | (pv -bpetr > $dest/$HOSTNAME.minecraft.tar.gz)
+    if [ ! -f $dest/$HOSTNAME.minecraft.tar.gz ]; then echo "Minecraft not backed up!" >> $myhome/$logfile ; fi
 fi
 if [ "$pol" == "y" ]; then
-    tar czfvp $dest/$HOSTNAME.wine.tar.gz $myhome/.PlayOnLinux
+    tar czfpP - $myhome/.PlayOnLinux | (pv -bpetr > $dest/$HOSTNAME.wine.tar.gz)
+    if [ ! -f $dest/$HOSTNAME.wine.tar.gz ]; then echo "PoL not backed up!" >> $myhome/$logfile ; fi
 fi
 if [ "$chat" == "y" ]; then
-    tar czfvp $dest/$HOSTNAME.hexchat.tar.gz $myhome/.config/hexchat/
+    tar czfpP - $myhome/.config/hexchat/ | (pv -bpetr > $dest/$HOSTNAME.hexchat.tar.gz)
+    if [ ! -f $dest/$HOSTNAME.hexchat.tar.gz ]; then echo "HexChat not backed up!" >> $myhome/$logfile ; fi
 fi
 if [ "$mail" == "y" ]; then
-   tar czfvp $dest/$HOSTNAME.email.tar.gz $myhome/.thunderbird/
+    tar czfpP - $myhome/.thunderbird/ | (pv -bpetr > $dest/$HOSTNAME.email.tar.gz)
+    if [ ! -f $dest/$HOSTNAME.email.tar.gz ]; then echo "Email not backed up!" >> $myhome/$logfile ; fi
 fi
 
 # Browsers, I'm trying the --exclude-caches tag. I don't know how I feel about it yet.
 # Otherwise, it's nice if you clear the caches first, otherwise it can get large
 if [ "$browsers" == "y" ]; then
-    tar czfvp $dest/$HOSTNAME.mozilla.tar.gz --exclude-caches $myhome/.mozilla
-    tar czfvp $dest/$HOSTNAME.chromium.tar.gz --exclude-caches $myhome/.config/google-chrome/
-    tar czfvp $dest/$HOSTNAME.edge-beta.tar.gz --exclude-caches $myhome/.config/microsoft-edge-beta/Default/
-    tar czfvp $dest/$HOSTNAME.edge-dev.tar.gz --exclude-caches $myhome/.config/microsoft-edge-dev/Default/
-    tar czfvp $dest/$HOSTNAME.brave.tar.gz --exclude-caches $myhome/.config/BraveSoftware/
+    tar czfpP - --exclude-caches $myhome/.mozilla | (pv -bpetr > $dest/$HOSTNAME.firefox.tar.gz)
+    if [ ! -f $dest/$HOSTNAME.firefox.tar.gz ]; then echo "Firefox not backed up!" >> $myhome/$logfile ; fi
+    tar czfpP - --exclude-caches $myhome/.config/google-chrome/ | (pv -bpetr > $dest/$HOSTNAME.chromium.tar.gz)
+    if [ ! -f $dest/$HOSTNAME.chromium.tar.gz ]; then echo "Chromium not backed up!" >> $myhome/$logfile ; fi
+    tar czfpP - --exclude-caches $myhome/.config/microsoft-edge-beta/Default/ | (pv -bpetr > $dest/$HOSTNAME.edge-beta.tar.gz)
+    if [ ! -f $dest/$HOSTNAME.edge-beta.tar.gz ]; then echo "Edge BETA not backed up!" >> $myhome/$logfile ; fi
+    tar czfpP - --exclude-caches $myhome/.config/microsoft-edge-dev/Default/ | (pv -bpetr > $dest/$HOSTNAME.edge-dev.tar.gz)
+    if [ ! -f $dest/$HOSTNAME.edge-dev.tar.gz ]; then echo "Edge DEV not backed up!" >> $myhome/$logfile ; fi
+    tar czfpP - --exclude-caches $myhome/.config/BraveSoftware/ | (pv -bpetr > $dest/$HOSTNAME.brave.tar.gz)
+    if [ ! -f $dest/$HOSTNAME.brave.tar.gz ]; then echo "Brave not backed up!" >> $myhome/$logfile ; fi
 fi
 
 # Network saves
 if [ "$networks" == "y" ]; then
-    tar czfvp $dest/$HOSTNAME.networkcerts2.tar.gz  $myhome/.local/share/networkmanagement/
-    tar czfvp $dest/$HOSTNAME.remotedolphin1.tar.gz $myhome/.local/share/remoteview/ 
-    tar czfvp $dest/$HOSTNAME.remotedolphin2.tar.gz $myhome/.local/share/*.xbel*
-    tar czfvp $dest/$HOSTNAME.vnc.tar.gz $myhome/.vnc
-    tar czfvp $dest/$HOSTNAME.ssh.tar.gz $myhome/.ssh
-    tar czfvp $dest/$HOSTNAME.kdeconn.tar.gz $myhome/.config/kdeconnect/
+    tar czfpP - $myhome/.local/share/networkmanagement/ | (pv -bpetr > $dest/$HOSTNAME.networkcerts2.tar.gz)
+    if [ ! -f $dest/$HOSTNAME.networkcerts2.tar.gz ]; then echo "Network Certs not backed up!" >> $myhome/$logfile ; fi
+    tar czfpP - $myhome/.local/share/remoteview/ | (pv -bpetr > $dest/$HOSTNAME.remotedolphin1.tar.gz)
+    if [ ! -f $dest/$HOSTNAME.remotedolphin1.tar.gz ]; then echo "Remote locations for Dolphin1 not backed up!" >> $myhome/$logfile ; fi
+    tar czfpP - $myhome/.local/share/*.xbel* | (pv -bpetr > $dest/$HOSTNAME.remotedolphin2.tar.gz)
+    if [ ! -f $dest/$HOSTNAME.remotedolphin2.tar.gz ]; then echo "Remote locations for Dolphin2  not backed up!" >> $myhome/$logfile ; fi
+    sudo tar czfpP - /etc/NetworkManager/system-connections/ | (pv -bpetr > $dest/$HOSTNAME.networkconnections.tar.gz)
+    if [ ! -f $dest/$HOSTNAME.networkconnections.tar.gz ]; then echo "Network Connections not backed up!" >> $myhome/$logfile ; fi
+    tar czfpP - $myhome/.vnc | (pv -bpetr > $dest/$HOSTNAME.vnc.tar.gz)
+    if [ ! -f $dest/$HOSTNAME.vnc.tar.gz ]; then echo "VNC not backed up!" >> $myhome/$logfile ; fi
+    tar czfpP - $myhome/.ssh | (pv -bpetr > $dest/$HOSTNAME.ssh.tar.gz)
+    if [ ! -f $dest/$HOSTNAME.ssh.tar.gz ]; then echo "SSH not backed up!" >> $myhome/$logfile ; fi
+    tar czfpP - $myhome/.config/kdeconnect/ | (pv -bpetr > $dest/$HOSTNAME.kdeconn.tar.gz)
+    if [ ! -f $dest/$HOSTNAME.kdeconn.tar.gz ]; then echo "KDE Connect not backed up!" >> $myhome/$logfile ; fi
 fi
 
 # other programs I have a few settings I hate tracking down
 if [ "$settins" == "y" ]; then
-    tar czfvp $dest/$HOSTNAME.gnucash.tar.gz $myhome/.local/share/gnucash/
-    tar czfvp $dest/$HOSTNAME.webcamoid.tar.gz $myhome/.config/Webcamoid/
-    tar czfvp $dest/$HOSTNAME.keepass.tar.gz $myhome/.config/keepassxc/
-    tar czfvp $dest/$HOSTNAME.kate.tar.gz $myhome/.config/katerc
-    tar czfvp $dest/$HOSTNAME.icons.tar.gz $myhome/.config/plasma-org.kde.plasma.desktop-appletsrc
-    tar czfvp $dest/$HOSTNAME.menufavs.tar.gz $myhome/.config/kactivitymanagerdrc
-    tar czfvp $dest/$HOSTNAME.scripts.tar.gz $myhome/scripts/
+    tar czfpP - $myhome/.local/share/gnucash/ | (pv -bpetr > $dest/$HOSTNAME.gnucash.tar.gz)
+    if [ ! -f $dest/$HOSTNAME.gnucash.tar.gz ]; then echo "GnuCash not backed up!" >> $myhome/$logfile ; fi
+    tar czfpP - $myhome/.config/Webcamoid/ | (pv -bpetr > $dest/$HOSTNAME.webcamoid.tar.gz)
+    if [ ! -f $dest/$HOSTNAME.webcamoid.tar.gz ]; then echo "Webcamoid not backed up!" >> $myhome/$logfile ; fi
+    tar czfpP - $myhome/.config/keepassxc/ | (pv -bpetr > $dest/$HOSTNAME.keepass.tar.gz)
+    if [ ! -f $dest/$HOSTNAME.keepass.tar.gz ]; then echo "KeePass not backed up!" >> $myhome/$logfile ; fi
+    tar czfpP - $myhome/.config/katerc | (pv -bpetr > $dest/$HOSTNAME.kate.tar.gz)
+    if [ ! -f $dest/$HOSTNAME.kate.tar.gz ]; then echo "Kate not backed up!" >> $myhome/$logfile ; fi
+    tar czfpP - $myhome/.config/plasma-org.kde.plasma.desktop-appletsrc | (pv -bpetr > $dest/$HOSTNAME.icons.tar.gz)
+    if [ ! -f $dest/$HOSTNAME.icons.tar.gz ]; then echo "Desktop Icons not backed up!" >> $myhome/$logfile ; fi
+    tar czfpP - $myhome/.config/kactivitymanagerdrc | (pv -bpetr > $dest/$HOSTNAME.menufavs.tar.gz)
+    if [ ! -f $dest/$HOSTNAME.menufavs.tar.gz ]; then echo "App menu not backed up!" >> $myhome/$logfile ; fi
+    tar czfpP - $myhome/scripts/ | (pv -bpetr > $dest/$HOSTNAME.scripts.tar.gz)
+    if [ ! -f $dest/$HOSTNAME.scripts.tar.gz ]; then echo "Scripts directory not backed up!" >> $myhome/$logfile ; fi
     cp $myhome/.config/kpatrc $myhome/Documents/System/BackUps/
+    if [ ! -f $myhome/.config/kpatrc ]; then echo "Kpatience not backed up!" >> $myhome/$logfile ; fi
 fi
 
 # Squish Documents
 if [ "$squishdocs" == "y" ]; then
-    tar czfvp $dest/$HOSTNAME.documents.tar.gz $myhome/Documents/
-    tar czfvp $dest/$HOSTNAME.desktop.tar.gz $myhome/Desktop/
+    tar czfpP - $myhome/Documents/ | (pv -bpetr > $dest/$HOSTNAME.documents.tar.gz)
+    if [ ! -f $dest/$HOSTNAME.documents.tar.gz ]; then echo "Documents (squished) not backed up!" >> $myhome/$logfile ; fi
+    tar czfpP - $myhome/Desktop/ | (pv -bpetr > $dest/$HOSTNAME.desktop.tar.gz)
+    if [ ! -f $dest/$HOSTNAME.desktop.tar.gz ]; then echo "Desktop (squished) not backed up!" >> $myhome/$logfile ; fi
 fi
 
 # Copy docs to other location
 if [ "$copydocs" == "y" ]; then
-    rsync -ulrvzh --progress $myhome/Documents/ $nas/Documents/
-    rsync -ulrvzh --progress $myhome/Desktop/ $nas/Desktop/
+    rsync -ulrvzh --progress $myhome/Documents/ $dest/Documents/
+    doccopy=$(diff -qr $myhome/Documents/ $dest/Documents/)
+    if [ ! -z "$doccopy" ]; then
+        echo "Problems with Documents Copying" >> $myhome/$logfile
+        read -p "Would you like to open Meld to see the differences in Documents? (y/n)" melddoc
+        if [ "$melddoc" == "y" ]; then meld $myhome/Documents/ $dest/Documents/ & disown ; fi
+    fi
+fi
+# Copy Desktop to NAS
+if [ "$copydesk" == "y" ]; then
+    rsync -ulrvzh --progress $myhome/Desktop/ $dest/Desktop/
+    deskcopy=$(diff -qr $myhome/Desktop/ $dest/Desktop/)
+    if [ ! -z "$deskcopy" ]; then
+        echo "Problems with Desktop Copying" >> $myhome/$logfile
+        read -p "Would you like to open Meld to see the differences in Desktops? (y/n)" melddesk
+        if [ "$melddesk" == "y" ]; then meld $myhome/Desktop/ $dest/Desktop/ & disown ; fi
+    fi
 fi
 
 # Copy videos, porn, whatever
 if [ "$copyvids" == "y" ]; then
     # This one is special due to a space in the directory name
-    rsync -ulrvzh --progress $myhome/Videos/ dave@192.168.100.34:"/volume1/Stuff/My\ Videos/vlogs/2021"
+    # rsync -ulrvzh --progress $myhome/Videos/ dave@192.168.100.34:"/volume1/Stuff/My\ Videos/vlogs/2021"
+    rsync -ulrvzh $myhome/Videos/ $dest/Videos/
+    vidcopy=$(diff -qr $myhome/Videos/ $dest/Videos/)
+    if [ ! -z "$vidcopy" ]; then
+        echo "Problems with Video Copying" >> $myhome/$logfile
+        read -p "Would you like to open Meld to see the differences in Videos? (y/n)" meldvid
+        if [ "$meldvid" == "y" ]; then meld $myhome/Videos/ $dest/Videos/ & disown ; fi
+    fi
+fi
+
+# Are there errors?
+if [ -f $myhome/$logfile ]; then
+    echo "There were issues with this backup!"
+    echo "See $myhome/$logfile"
+    cat $myhome/$logfile 
 fi
 
 # unmount NAS, or USB, or whatever... 
-if mounted "$mntpt"; then
+if mounted "$dest"; then
     read -p "Unmount NAS?" umount
     if [ "$umount" == "y" ]; then
-        sudo umount $mntpt
-	echo unmounted $mntpt
+        sudo umount $dest
+	echo unmounted $dest
 	exit 2
     fi
 fi
