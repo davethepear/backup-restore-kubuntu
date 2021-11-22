@@ -2,4 +2,7 @@
 
 Backing up (and eventually auto restore) in Linux. It's taken me a long time to figure out what's important to me for backup.
 
-# This isn't finished and has NOT been tested... try it at your own risk.
+# It works for me... try it at your own risk.
+
+# Requirements
+- PV - thought it made it easier to see what's happening
