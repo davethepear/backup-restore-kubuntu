@@ -81,47 +81,47 @@ fi
 if [ "$browsers" == "y" ]; then
     tar czfpP - --exclude-caches $myhome/.mozilla | (pv -bpetr > $dest/$HOSTNAME.firefox.tar.gz)
     if [ ! -f $dest/$HOSTNAME.firefox.tar.gz ]; then echo "Firefox not backed up!" >> $myhome/$logfile ; fi
-    tar czfpP - --exclude-caches $myhome/.config/google-chrome/ | (pv -bpetr > $dest/$HOSTNAME.chromium.tar.gz)
+    tar czfpP - --exclude-caches $myhome/.config/google-chrome/ | (pv -N Chromium -bpetr > $dest/$HOSTNAME.chromium.tar.gz)
     if [ ! -f $dest/$HOSTNAME.chromium.tar.gz ]; then echo "Chromium not backed up!" >> $myhome/$logfile ; fi
-    tar czfpP - --exclude-caches $myhome/.config/microsoft-edge-beta/Default/ | (pv -bpetr > $dest/$HOSTNAME.edge-beta.tar.gz)
+    tar czfpP - --exclude-caches $myhome/.config/microsoft-edge-beta/Default/ | (pv -N EdgeBeta -bpetr > $dest/$HOSTNAME.edge-beta.tar.gz)
     if [ ! -f $dest/$HOSTNAME.edge-beta.tar.gz ]; then echo "Edge BETA not backed up!" >> $myhome/$logfile ; fi
-    tar czfpP - --exclude-caches $myhome/.config/microsoft-edge-dev/Default/ | (pv -bpetr > $dest/$HOSTNAME.edge-dev.tar.gz)
+    tar czfpP - --exclude-caches $myhome/.config/microsoft-edge-dev/Default/ | (pv -N EdgeDev -bpetr > $dest/$HOSTNAME.edge-dev.tar.gz)
     if [ ! -f $dest/$HOSTNAME.edge-dev.tar.gz ]; then echo "Edge DEV not backed up!" >> $myhome/$logfile ; fi
-    tar czfpP - --exclude-caches $myhome/.config/BraveSoftware/ | (pv -bpetr > $dest/$HOSTNAME.brave.tar.gz)
+    tar czfpP - --exclude-caches $myhome/.config/BraveSoftware/ | (pv -N Brave -bpetr > $dest/$HOSTNAME.brave.tar.gz)
     if [ ! -f $dest/$HOSTNAME.brave.tar.gz ]; then echo "Brave not backed up!" >> $myhome/$logfile ; fi
 fi
 
 # Network saves
 if [ "$networks" == "y" ]; then
-    tar czfpP - $myhome/.local/share/networkmanagement/ | (pv -bpetr > $dest/$HOSTNAME.networkcerts2.tar.gz)
+    tar czfpP - $myhome/.local/share/networkmanagement/ | (pv -N NetworkCerts -bpetr > $dest/$HOSTNAME.networkcerts2.tar.gz)
     if [ ! -f $dest/$HOSTNAME.networkcerts2.tar.gz ]; then echo "Network Certs not backed up!" >> $myhome/$logfile ; fi
-    tar czfpP - $myhome/.local/share/remoteview/ | (pv -bpetr > $dest/$HOSTNAME.remotedolphin1.tar.gz)
+    tar czfpP - $myhome/.local/share/remoteview/ | (pv -N Dolphin1 -bpetr > $dest/$HOSTNAME.remotedolphin1.tar.gz)
     if [ ! -f $dest/$HOSTNAME.remotedolphin1.tar.gz ]; then echo "Remote locations for Dolphin1 not backed up!" >> $myhome/$logfile ; fi
-    tar czfpP - $myhome/.local/share/*.xbel* | (pv -bpetr > $dest/$HOSTNAME.remotedolphin2.tar.gz)
+    tar czfpP - $myhome/.local/share/*.xbel* | (pv -N Dolphin2 -bpetr > $dest/$HOSTNAME.remotedolphin2.tar.gz)
     if [ ! -f $dest/$HOSTNAME.remotedolphin2.tar.gz ]; then echo "Remote locations for Dolphin2  not backed up!" >> $myhome/$logfile ; fi
-    sudo tar czfpP - /etc/NetworkManager/system-connections/ | (pv -bpetr > $dest/$HOSTNAME.networkconnections.tar.gz)
+    sudo tar czfpP - /etc/NetworkManager/system-connections/ | (pv -N NetworkManager -bpetr > $dest/$HOSTNAME.networkconnections.tar.gz)
     if [ ! -f $dest/$HOSTNAME.networkconnections.tar.gz ]; then echo "Network Connections not backed up!" >> $myhome/$logfile ; fi
-    tar czfpP - $myhome/.vnc | (pv -bpetr > $dest/$HOSTNAME.vnc.tar.gz)
+    tar czfpP - $myhome/.vnc | (pv -N VNC -bpetr > $dest/$HOSTNAME.vnc.tar.gz)
     if [ ! -f $dest/$HOSTNAME.vnc.tar.gz ]; then echo "VNC not backed up!" >> $myhome/$logfile ; fi
-    tar czfpP - $myhome/.ssh | (pv -bpetr > $dest/$HOSTNAME.ssh.tar.gz)
+    tar czfpP - $myhome/.ssh | (pv -N SSH -bpetr > $dest/$HOSTNAME.ssh.tar.gz)
     if [ ! -f $dest/$HOSTNAME.ssh.tar.gz ]; then echo "SSH not backed up!" >> $myhome/$logfile ; fi
-    tar czfpP - $myhome/.config/kdeconnect/ | (pv -bpetr > $dest/$HOSTNAME.kdeconn.tar.gz)
+    tar czfpP - $myhome/.config/kdeconnect/ | (pv -N KDEConnect -bpetr > $dest/$HOSTNAME.kdeconn.tar.gz)
     if [ ! -f $dest/$HOSTNAME.kdeconn.tar.gz ]; then echo "KDE Connect not backed up!" >> $myhome/$logfile ; fi
 fi
 
 # other programs I have a few settings I hate tracking down
 if [ "$settins" == "y" ]; then
-    tar czfpP - $myhome/.local/share/gnucash/ | (pv -bpetr > $dest/$HOSTNAME.gnucash.tar.gz)
+    tar czfpP - $myhome/.local/share/gnucash/ | (pv -N GnuCash -bpetr > $dest/$HOSTNAME.gnucash.tar.gz)
     if [ ! -f $dest/$HOSTNAME.gnucash.tar.gz ]; then echo "GnuCash not backed up!" >> $myhome/$logfile ; fi
-    tar czfpP - $myhome/.config/Webcamoid/ | (pv -bpetr > $dest/$HOSTNAME.webcamoid.tar.gz)
+    tar czfpP - $myhome/.config/Webcamoid/ | (pv -N Webcamoid -bpetr > $dest/$HOSTNAME.webcamoid.tar.gz)
     if [ ! -f $dest/$HOSTNAME.webcamoid.tar.gz ]; then echo "Webcamoid not backed up!" >> $myhome/$logfile ; fi
-    tar czfpP - $myhome/.config/keepassxc/ | (pv -bpetr > $dest/$HOSTNAME.keepass.tar.gz)
+    tar czfpP - $myhome/.config/keepassxc/ | (pv -N KeePass -bpetr > $dest/$HOSTNAME.keepass.tar.gz)
     if [ ! -f $dest/$HOSTNAME.keepass.tar.gz ]; then echo "KeePass not backed up!" >> $myhome/$logfile ; fi
-    tar czfpP - $myhome/.config/katerc | (pv -bpetr > $dest/$HOSTNAME.kate.tar.gz)
+    tar czfpP - $myhome/.config/katerc | (pv -N Kate -bpetr > $dest/$HOSTNAME.kate.tar.gz)
     if [ ! -f $dest/$HOSTNAME.kate.tar.gz ]; then echo "Kate not backed up!" >> $myhome/$logfile ; fi
-    tar czfpP - $myhome/.config/plasma-org.kde.plasma.desktop-appletsrc | (pv -bpetr > $dest/$HOSTNAME.icons.tar.gz)
+    tar czfpP - $myhome/.config/plasma-org.kde.plasma.desktop-appletsrc | (pv -N DesktopIcons -bpetr > $dest/$HOSTNAME.icons.tar.gz)
     if [ ! -f $dest/$HOSTNAME.icons.tar.gz ]; then echo "Desktop Icons not backed up!" >> $myhome/$logfile ; fi
-    tar czfpP - $myhome/.config/kactivitymanagerdrc | (pv -bpetr > $dest/$HOSTNAME.menufavs.tar.gz)
+    tar czfpP - $myhome/.config/kactivitymanagerdrc | (pv -N MenuFavorites -bpetr > $dest/$HOSTNAME.menufavs.tar.gz)
     if [ ! -f $dest/$HOSTNAME.menufavs.tar.gz ]; then echo "App menu not backed up!" >> $myhome/$logfile ; fi
     tar czfpP - $myhome/scripts/ | (pv -bpetr > $dest/$HOSTNAME.scripts.tar.gz)
     if [ ! -f $dest/$HOSTNAME.scripts.tar.gz ]; then echo "Scripts directory not backed up!" >> $myhome/$logfile ; fi
@@ -131,15 +131,16 @@ fi
 
 # Squish Documents
 if [ "$squishdocs" == "y" ]; then
-    tar czfpP - $myhome/Documents/ | (pv -bpetr > $dest/$HOSTNAME.documents.tar.gz)
+    tar czfpP - $myhome/Documents/ | (pv -N Documents -bpetr > $dest/$HOSTNAME.documents.tar.gz)
     if [ ! -f $dest/$HOSTNAME.documents.tar.gz ]; then echo "Documents (squished) not backed up!" >> $myhome/$logfile ; fi
-    tar czfpP - $myhome/Desktop/ | (pv -bpetr > $dest/$HOSTNAME.desktop.tar.gz)
+    tar czfpP - $myhome/Desktop/ | (pv -N Desktop -bpetr > $dest/$HOSTNAME.desktop.tar.gz)
     if [ ! -f $dest/$HOSTNAME.desktop.tar.gz ]; then echo "Desktop (squished) not backed up!" >> $myhome/$logfile ; fi
 fi
 
 # Copy docs to other location
 if [ "$copydocs" == "y" ]; then
-    rsync -ulrvzh --progress $myhome/Documents/ $dest/Documents/
+    echo "Documents"
+    rsync -ulrzh --info=progress2 $myhome/Documents/ $dest/Documents/
     doccopy=$(diff -qr $myhome/Documents/ $dest/Documents/)
     if [ ! -z "$doccopy" ]; then
         echo "Problems with Documents Copying" >> $myhome/$logfile
@@ -149,7 +150,8 @@ if [ "$copydocs" == "y" ]; then
 fi
 # Copy Desktop to NAS
 if [ "$copydesk" == "y" ]; then
-    rsync -ulrvzh --progress $myhome/Desktop/ $dest/Desktop/
+    echo "Desktop"
+    rsync -ulrzh --info=progress2 $myhome/Desktop/ $dest/Desktop/
     deskcopy=$(diff -qr $myhome/Desktop/ $dest/Desktop/)
     if [ ! -z "$deskcopy" ]; then
         echo "Problems with Desktop Copying" >> $myhome/$logfile
@@ -161,8 +163,8 @@ fi
 # Copy videos, porn, whatever
 if [ "$copyvids" == "y" ]; then
     # This one is special due to a space in the directory name
-    # rsync -ulrvzh --progress $myhome/Videos/ dave@192.168.100.34:"/volume1/Stuff/My\ Videos/vlogs/2021"
-    rsync -ulrvzh $myhome/Videos/ $dest/Videos/
+    echo "Videos"
+    rsync -ulrzh $myhome/Videos/ $dest/Videos/
     vidcopy=$(diff -qr $myhome/Videos/ $dest/Videos/)
     if [ ! -z "$vidcopy" ]; then
         echo "Problems with Video Copying" >> $myhome/$logfile
