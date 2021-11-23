@@ -181,11 +181,11 @@ if [ -f $logfile ]; then
 fi
 
 # unmount NAS, or USB, or whatever... 
-if mounted "$dest"; then
+if mounted "$mntpt"; then
     read -p "Unmount NAS?" umount
     if [ "$umount" == "y" ]; then
-        sudo umount $dest
-	echo unmounted $dest
+        sudo umount $mntpt
+	echo unmounted $mntpt
 	exit 0
     fi
 fi
