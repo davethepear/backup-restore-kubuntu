@@ -110,7 +110,7 @@ if [ "$networks" == "y" ]; then
 fi
 
 # other programs I have a few settings I hate tracking down
-if [ "$settins" == "y" ]; then
+if [ "$settings" == "y" ]; then
     tar czfpP - $myhome/.local/share/gnucash/ | (pv -N GnuCash -bpetr > $dest/$HOSTNAME.gnucash.tar.gz)
     if [ ! -f $dest/$HOSTNAME.gnucash.tar.gz ]; then echo "GnuCash not backed up!" >> $logfile ; fi
     tar czfpP - $myhome/.config/Webcamoid/ | (pv -N Webcamoid -bpetr > $dest/$HOSTNAME.webcamoid.tar.gz)
