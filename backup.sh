@@ -12,7 +12,7 @@ if [[ "$EUID" == 0 ]]; then
 	echo "While you need sudo for a few things, mount and umount, and a couple of system files"
 	echo "this shouldn't be run AS root, so now that you're verified as sudo you can run it"
 	echo "again without sudo: ./backup.sh"
-	exit 2
+	exit 0
 fi
 
 mounted    () { findmnt -rno SOURCE,TARGET "$1" >/dev/null;} #path or device
@@ -186,6 +186,6 @@ if mounted "$dest"; then
     if [ "$umount" == "y" ]; then
         sudo umount $dest
 	echo unmounted $dest
-	exit 2
+	exit 0
     fi
 fi
