@@ -2,8 +2,8 @@
 
 myhome=/home/dave
 mntpt=/nfs/nas # your mount point, if using network drive or external, may be in /media. comment out if saving locally
-dest=/nfs/nas/BackUps/PortablePear # destination directory on drive or nfs
-naslogin=dave@192.168.100.34:/volume1/Stuff # NAS login - if no nas, comment this out
+dest=/nfs/nas/BackUps/ # destination directory on drive or nfs
+naslogin=dave@192.168.1.2:/volume1/Stuff # NAS login - if no nas, comment this out
 
 bktime=$(date +"%F_%H-%M")
 logfile="$myhome/BackUpErrors-$bktime".log
@@ -33,8 +33,7 @@ if [ ! -d $dest ]; then mkdir -p $dest ; fi
 read -p "Backup everything, hit enter... or 'n' for step-by-step (Enter/n)?" parse
 if [ "$parse" == "" ]; then
     echo Backing up EVERYTHING!
-    mine=y
-    pol=y
+    homebase=y
     chat=y
     mail=y
     browsers=y
@@ -44,42 +43,51 @@ if [ "$parse" == "" ]; then
     copydocs=y
     copydesk=y
     copyvids=y
+    mine=y
+    pol=y
 else
-    read -p "Backup Minecraft?" mine
-    read -p "Backup Wine (Play on Linux)" pol
+    read -p "Backup $HOME (non-recursive)" homebase
     read -p "Backup Chat Programs?" chat
     read -p "Backup Thunderbird?" mail
     read -p "Backup browsers?" browsers
     read -p "Backup network locations and logins?" networks
     read -p "Backup program settings?" settings
     read -p "Compress Documents & Desktop into a tar.gz on NAS?" squishdocs
-    read -p "Copy Documents to NAS?" copydocs
-    read -p "Copy Desktop to NAS?" copydesk
+    read -p "Copy Uncompressed Documents to NAS?" copydocs
+    read -p "Copy Uncompressed Desktop to NAS?" copydesk
     read -p "Backup Videos to NAS?" copyvids
+    read -p "Backup Minecraft Worlds?" mine
+    read -p "Backup Wine (Play on Linux)" pol
 fi
 # Minecraft worlds... I use a lot of stuff in Wine (PoL)... and Hexchat (IRC)... and Thunderbird (email)
 # These are pretty large saves, usually, so I grouped them into one spot.
+
+if [ "$homebase" == "y" ]; then
+    echo "Backing up $HOME, with no directories!"
+    find . -maxdepth 1 -type f -name "*" -exec tar czfpP /nfs/nas/BackUps/PortablePear/$HOSTNAME.home.tar.gz {} +
+    if [ ! -f $dest/$HOSTNAME.home.tar.gz ]; then echo "$HOME not backed up!" >> $logfile ; fi
+fi
 if [ "$mine" == "y" ]; then
-    tar czfpP - $myhome/.minecraft/saves | (pv -bpetr > $dest/$HOSTNAME.minecraft.tar.gz)
+    tar czfpP - $myhome/.minecraft/saves | (pv -N Minecraft -bpetr > $dest/$HOSTNAME.minecraft.tar.gz)
     if [ ! -f $dest/$HOSTNAME.minecraft.tar.gz ]; then echo "Minecraft not backed up!" >> $logfile ; fi
 fi
 if [ "$pol" == "y" ]; then
-    tar czfpP - $myhome/.PlayOnLinux | (pv -bpetr > $dest/$HOSTNAME.wine.tar.gz)
+    tar czfpP - $myhome/.PlayOnLinux | (pv -N PoL -bpetr > $dest/$HOSTNAME.wine.tar.gz)
     if [ ! -f $dest/$HOSTNAME.wine.tar.gz ]; then echo "PoL not backed up!" >> $logfile ; fi
 fi
 if [ "$chat" == "y" ]; then
-    tar czfpP - $myhome/.config/hexchat/ | (pv -bpetr > $dest/$HOSTNAME.hexchat.tar.gz)
+    tar czfpP - $myhome/.config/hexchat/ | (pv -N Hexchat -bpetr > $dest/$HOSTNAME.hexchat.tar.gz)
     if [ ! -f $dest/$HOSTNAME.hexchat.tar.gz ]; then echo "HexChat not backed up!" >> $logfile ; fi
 fi
 if [ "$mail" == "y" ]; then
-    tar czfpP - $myhome/.thunderbird/ | (pv -bpetr > $dest/$HOSTNAME.email.tar.gz)
+    tar czfpP - $myhome/.thunderbird/ | (pv -N Email -bpetr > $dest/$HOSTNAME.email.tar.gz)
     if [ ! -f $dest/$HOSTNAME.email.tar.gz ]; then echo "Email not backed up!" >> $logfile ; fi
 fi
 
 # Browsers, I'm trying the --exclude-caches tag. I don't know how I feel about it yet.
 # Otherwise, it's nice if you clear the caches first, otherwise it can get large
 if [ "$browsers" == "y" ]; then
-    tar czfpP - --exclude-caches $myhome/.mozilla | (pv -bpetr > $dest/$HOSTNAME.firefox.tar.gz)
+    tar czfpP - --exclude-caches $myhome/.mozilla | (pv -N Firefox -bpetr > $dest/$HOSTNAME.firefox.tar.gz)
     if [ ! -f $dest/$HOSTNAME.firefox.tar.gz ]; then echo "Firefox not backed up!" >> $logfile ; fi
     tar czfpP - --exclude-caches $myhome/.config/google-chrome/ | (pv -N Chromium -bpetr > $dest/$HOSTNAME.chromium.tar.gz)
     if [ ! -f $dest/$HOSTNAME.chromium.tar.gz ]; then echo "Chromium not backed up!" >> $logfile ; fi
@@ -140,7 +148,7 @@ fi
 # Copy docs to other location
 if [ "$copydocs" == "y" ]; then
     echo "Documents"
-    rsync -ulrzh --info=progress2 $myhome/Documents/ $dest/Documents/
+    rsync -ulrzh --delete-before --info=progress2 $myhome/Documents/ $dest/Documents/
     doccopy=$(diff -qr $myhome/Documents/ $dest/Documents/)
     if [ ! -z "$doccopy" ]; then
         echo "Problems with Documents Copying" >> $logfile
@@ -151,7 +159,7 @@ fi
 # Copy Desktop to NAS
 if [ "$copydesk" == "y" ]; then
     echo "Desktop"
-    rsync -ulrzh --info=progress2 $myhome/Desktop/ $dest/Desktop/
+    rsync -ulrzh --delete-before --info=progress2 $myhome/Desktop/ $dest/Desktop/
     deskcopy=$(diff -qr $myhome/Desktop/ $dest/Desktop/)
     if [ ! -z "$deskcopy" ]; then
         echo "Problems with Desktop Copying" >> $logfile
