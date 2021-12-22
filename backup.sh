@@ -64,7 +64,7 @@ fi
 
 if [ "$homebase" == "y" ]; then
     echo "Backing up $HOME, with no directories!"
-    find . -maxdepth 1 -type f -name "*" -exec tar czfpP /nfs/nas/BackUps/PortablePear/$HOSTNAME.home.tar.gz {} +
+    find . -maxdepth 1 -type f -name "*" -exec tar czfpP $dest/$HOSTNAME.home.tar.gz {} +
     if [ ! -f $dest/$HOSTNAME.home.tar.gz ]; then echo "$HOME not backed up!" >> $logfile ; fi
 fi
 if [ "$mine" == "y" ]; then
