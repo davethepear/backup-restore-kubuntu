@@ -131,7 +131,7 @@ if [ "$settings" == "y" ]; then
     if [ ! -f $dest/$HOSTNAME.icons.tar.gz ]; then echo "Desktop Icons not backed up!" >> $logfile ; fi
     tar czfpP - $myhome/.config/kactivitymanagerdrc | (pv -N MenuFavorites -bpetr > $dest/$HOSTNAME.menufavs.tar.gz)
     if [ ! -f $dest/$HOSTNAME.menufavs.tar.gz ]; then echo "App menu not backed up!" >> $logfile ; fi
-    tar czfpP - $myhome/scripts/ | (pv -bpetr > $dest/$HOSTNAME.scripts.tar.gz)
+    tar czfpP - $myhome/scripts/ | (pv -N Scripts -bpetr > $dest/$HOSTNAME.scripts.tar.gz)
     if [ ! -f $dest/$HOSTNAME.scripts.tar.gz ]; then echo "Scripts directory not backed up!" >> $logfile ; fi
     cp $myhome/.config/kpatrc $myhome/Documents/System/BackUps/
     if [ ! -f $myhome/.config/kpatrc ]; then echo "Kpatience not backed up!" >> $logfile ; fi
