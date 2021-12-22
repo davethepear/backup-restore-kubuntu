@@ -1,8 +1,10 @@
 # backup-restore-linux
 
-Backing up (and eventually auto restore) in Linux. It's taken me a long time to figure out what's important to me for backup. You will have to go through it and see what you have or don't have. I have 4 browsers installed, Play on Linux, Minecraft, Thunderbird, Hexchat, GnuCash, Webcamoid, and eww, Microshaft Edge.
+Backing up in Linux (Specifically Kubuntu). It's taken me a long time to figure out what's important to me for backup. You will have to go through it and see what you have or don't have. I have 4 browsers installed, Play on Linux, Minecraft, Thunderbird, Hexchat, GnuCash, Webcamoid, and eww, Microshaft Edge.
 
 ## It works for me... try it at your own risk.
+
+Restoring - I just wrote it... I have not tested it yet. Use the restore at your own risk.
 
 ## Requirements
 - rsync - because, yeah, it's what I used. it seems fast enough and is especially good at keeping things updated.
